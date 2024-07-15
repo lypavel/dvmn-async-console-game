@@ -37,7 +37,7 @@ def draw(canvas: window) -> None:
         canvas.border()
         canvas.nodelay(True)
 
-        for coroutine in coroutines:
+        for coroutine in coroutines.copy():
             try:
                 coroutine.send(None)
             except StopIteration:
