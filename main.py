@@ -1,7 +1,7 @@
 import curses
 from curses import window
 from pathlib import Path
-from random import randint
+from random import choice, randint
 import time
 
 from animation.fire import fire
@@ -17,7 +17,11 @@ def draw(canvas: window) -> None:
     height, width = canvas.getmaxyx()
     stars_number = randint(50, 200)
 
-    coroutines = [blink(canvas, height, width, symbols)
+    coroutines = [blink(canvas,
+                        randint(1, height - 2),
+                        randint(1, width - 2),
+                        choice(symbols),
+                        randint(0, 50))
                   for _ in range(1, stars_number + 1)]
 
     coroutines.append(fire(canvas, height // 2, width // 2))
