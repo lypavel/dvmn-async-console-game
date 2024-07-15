@@ -6,9 +6,9 @@ async def blink(canvas: window,
                 row: int,
                 column: int,
                 symbol: str = '*',
-                animation_delay: int = 0):
+                offset_tics: int = 0):
 
-    for _ in range(animation_delay):
+    for _ in range(offset_tics):
         await asyncio.sleep(0)
 
     while True:
