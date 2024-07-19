@@ -1,5 +1,6 @@
-import asyncio
 from curses import A_DIM, A_BOLD, window
+
+from .animation_utils import sleep
 
 
 async def blink(canvas: window,
@@ -8,22 +9,17 @@ async def blink(canvas: window,
                 symbol: str = '*',
                 offset_tics: int = 0):
 
-    for _ in range(offset_tics):
-        await asyncio.sleep(0)
+    await sleep(offset_tics)
 
     while True:
         canvas.addstr(row, column, symbol, A_DIM)
-        for _ in range(20):
-            await asyncio.sleep(0)
+        await sleep(20)
 
         canvas.addstr(row, column, symbol)
-        for _ in range(3):
-            await asyncio.sleep(0)
+        await sleep(3)
 
         canvas.addstr(row, column, symbol, A_BOLD)
-        for _ in range(5):
-            await asyncio.sleep(0)
+        await sleep(5)
 
         canvas.addstr(row, column, symbol)
-        for _ in range(3):
-            await asyncio.sleep(0)
+        await sleep(3)
