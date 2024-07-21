@@ -5,6 +5,7 @@ from pathlib import Path
 
 from .animation_utils import get_frame_size, draw_frame, read_controls
 from .fire import fire
+from .show_game_over import show_game_over
 from .physics import update_speed
 
 
@@ -30,6 +31,10 @@ async def animate_spaceship(canvas: window,
 
     row_speed, column_speed = 0, 0
     for frame in cycle(frames):
+        for obstacle in obstacles:
+            if obstacle.has_collision(row, column):
+                coroutines.append(show_game_over(canvas))
+                return
         frame_height, frame_width = get_frame_size(frame)
         canvas_height, canvas_width = canvas.getmaxyx()
 
