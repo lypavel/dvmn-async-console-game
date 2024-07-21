@@ -4,6 +4,7 @@ from itertools import cycle
 from pathlib import Path
 
 from .animation_utils import get_frame_size, draw_frame, read_controls
+from .fire import fire
 from .physics import update_speed
 
 
@@ -17,6 +18,9 @@ def get_spaceship_frames(files: Path):
 
 
 async def animate_spaceship(canvas: window,
+                            coroutines: list,
+                            obstacles: list,
+                            obstacles_in_last_collision: list,
                             row: int,
                             column: int,
                             frames: list[str],
@@ -31,7 +35,15 @@ async def animate_spaceship(canvas: window,
 
         available_width = canvas_width - frame_width - border_width
         available_height = canvas_height - frame_height - border_width
-        row_movement, column_movement, space_pressed = read_controls(canvas, speed)
+        row_movement, column_movement, space_pressed = read_controls(canvas,
+                                                                     speed)
+
+        if space_pressed:
+            coroutines.append(fire(canvas,
+                                   obstacles,
+                                   obstacles_in_last_collision,
+                                   row,
+                                   column + 2))
 
         row_speed, column_speed = update_speed(
             row_speed, column_speed, row_movement, column_movement

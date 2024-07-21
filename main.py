@@ -4,7 +4,6 @@ from pathlib import Path
 from random import choice, randint
 import time
 
-from animation.fire import fire
 from animation.space_garbage import fly_garbage
 from animation.spaceship import animate_spaceship, get_spaceship_frames
 from animation.stars import blink
@@ -13,6 +12,8 @@ from animation.animation_utils import sleep
 TIC_TIMEOUT = 0.1
 
 COROUTINES = []
+OBSTACLES = []
+OBSTACLES_IN_LAST_COLLISION = []
 
 import logging
 logger = logging.getLogger('g')
@@ -30,7 +31,12 @@ async def fill_orbit_with_garbage(canvas, width):
         garbage_piece = choice(garbage)
 
         COROUTINES.append(
-            fly_garbage(canvas, randint(1, width), garbage_piece)
+            fly_garbage(canvas,
+                        COROUTINES,
+                        OBSTACLES,
+                        OBSTACLES_IN_LAST_COLLISION,
+                        randint(1, width),
+                        garbage_piece)
         )
 
         await sleep(10)
@@ -51,10 +57,12 @@ def draw(canvas: window) -> None:
         for _ in range(1, stars_number + 1)
         ])
 
-    COROUTINES.append(fire(canvas, height // 2, width // 2))
     COROUTINES.append(
         animate_spaceship(
             canvas,
+            COROUTINES,
+            OBSTACLES,
+            OBSTACLES_IN_LAST_COLLISION,
             height // 2,
             width // 2,
             get_spaceship_frames(

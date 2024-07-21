@@ -2,8 +2,12 @@ import asyncio
 import curses
 from curses import window
 
+from .explosion import explode
+
 
 async def fire(canvas: window,
+               obstacles: list,
+               obstacles_in_last_collision: list,
                start_row: int,
                start_column: int,
                rows_speed: float = -0.3,
@@ -30,6 +34,11 @@ async def fire(canvas: window,
     curses.beep()
 
     while 0 < row < max_row and 0 < column < max_column:
+        for obstacle in obstacles.copy():
+            if obstacle.has_collision(row, column):
+                obstacles_in_last_collision.append(obstacle)
+                await explode(canvas, row, column)
+                return
         canvas.addstr(round(row), round(column), symbol)
         await asyncio.sleep(0)
         canvas.addstr(round(row), round(column), ' ')
