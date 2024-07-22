@@ -7,7 +7,7 @@ UP_KEY_CODE = 259
 DOWN_KEY_CODE = 258
 
 
-async def sleep(tics=1):
+async def sleep(tics: int = 1) -> None:
     for _ in range(tics):
         await asyncio.sleep(0)
 
