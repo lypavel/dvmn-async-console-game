@@ -1,7 +1,7 @@
 from pathlib import Path
 
 
-def get_spaceship_frames(files: Path):
+def get_spaceship_frames(files: Path) -> list:
     frames = []
     for file in files:
         with open(file, 'r') as stream:

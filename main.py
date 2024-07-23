@@ -11,10 +11,10 @@ from animation.animation_utils import draw_frame, get_frame_size, \
 from animation.explosion import explode
 from animation.physics import update_speed
 from animation.show_game_over import get_game_over_text, show_game_over
-from animation.space_garbage import get_garbage_delay_tics
+from animation.space_garbage import get_garbage_delay_tics, get_garbage_frames
 from animation.spaceship import get_spaceship_frames
 from animation.stars import blink
-from animation.obstacles import Obstacle, show_obstacles
+from animation.obstacles import Obstacle
 
 TIC_TIMEOUT = 0.1
 YEAR = 1957
@@ -35,39 +35,40 @@ OBSTACLES = []
 OBSTACLES_IN_LAST_COLLISION = []
 
 
-async def count_years(year_field: window):
+async def count_years(year_field: window) -> None:
     global YEAR
 
-    # message = str(YEAR)
-    # year_field.addstr(1, 1, message)
-
     while True:
-        await sleep(20)
-        YEAR += 1
         event = PHRASES.get(YEAR, '')
         message = f'{YEAR} - {event}' if event else str(YEAR)
         year_field.addstr(1, 1, message)
+        await sleep(20)
+        YEAR += 1
 
 
-async def fill_orbit_with_garbage(canvas: window, width: int) -> None:
-    garbage = []
-    for file in Path('animation/garbage').glob('*.txt'):
-        with open(file, 'r') as stream:
-            garbage.append(stream.read())
+async def fill_orbit_with_garbage(canvas: window, canvas_width: int) -> None:
+    garbage = get_garbage_frames(
+        Path('animation/garbage').glob('*.txt')
+    )
 
     while True:
         delay = get_garbage_delay_tics(YEAR)
-        if delay:
-            garbage_piece = choice(garbage)
+        if not delay:
+            await asyncio.sleep(0)
+            continue
 
-            COROUTINES.append(
-                fly_garbage(canvas,
-                            randint(1, width),
-                            garbage_piece)
-            )
+        garbage_piece = choice(garbage)
+        _, garbage_width = get_frame_size(garbage_piece)
+        border_width = 1
+        max_column = canvas_width - garbage_width - border_width
 
-            sleep(delay)
-        await asyncio.sleep(0)
+        COROUTINES.append(
+            fly_garbage(canvas,
+                        randint(1, max_column),
+                        garbage_piece)
+        )
+
+        await sleep(delay)
 
 
 async def fly_garbage(canvas: window,
@@ -86,8 +87,6 @@ async def fly_garbage(canvas: window,
     rows, columns = get_frame_size(garbage_frame)
     obstacle = Obstacle(row, column, rows, columns)
     OBSTACLES.append(obstacle)
-
-    COROUTINES.append(show_obstacles(canvas, OBSTACLES))
 
     try:
         while row < rows_number:
@@ -169,7 +168,7 @@ async def animate_spaceship(canvas: window,
         row_movement, column_movement, space_pressed = read_controls(canvas,
                                                                      speed)
 
-        if space_pressed:
+        if space_pressed and YEAR >= 2020:
             COROUTINES.append(fire(canvas,
                                    row,
                                    column + 2))
@@ -179,10 +178,10 @@ async def animate_spaceship(canvas: window,
         )
 
         column = max(column + column_speed, 1) \
-            if column_movement == -1 * speed \
+            if column_speed < 0 \
             else min(column + column_speed, available_width)
         row = max(row + row_speed, 1) \
-            if row_movement == -1 * speed \
+            if row_speed < 0 \
             else min(row + row_speed, available_height)
 
         draw_frame(canvas, row, column, frame)
@@ -194,13 +193,14 @@ async def animate_spaceship(canvas: window,
 
 def draw(canvas: window) -> None:
     canvas_height, canvas_width = canvas.getmaxyx()
+
     year_field_height = 3
-    year_field_width = 30
-    current_year = canvas.derwin(
+    year_field_width = 50
+    year_field = canvas.derwin(
         canvas_height - year_field_height, canvas_width - year_field_width
     )
 
-    COROUTINES.append(count_years(current_year))
+    COROUTINES.append(count_years(year_field))
 
     symbols = '+*.:'
     stars_number = randint(50, 200)
@@ -229,7 +229,7 @@ def draw(canvas: window) -> None:
     while True:
         curses.curs_set(False)
         canvas.border()
-        current_year.border()
+        year_field.border()
         canvas.nodelay(True)
 
         for coroutine in COROUTINES.copy():
@@ -238,7 +238,7 @@ def draw(canvas: window) -> None:
             except StopIteration:
                 COROUTINES.remove(coroutine)
         canvas.refresh()
-        current_year.refresh()
+        year_field.refresh()
         time.sleep(TIC_TIMEOUT)
 
 

@@ -1,3 +1,6 @@
+from pathlib import Path
+
+
 def get_garbage_delay_tics(year):
     if year < 1961:
         return None
@@ -13,3 +16,13 @@ def get_garbage_delay_tics(year):
         return 6
     else:
         return 2
+
+
+def get_garbage_frames(files: Path) -> list:
+    frames = []
+
+    for file in files:
+        with open(file, 'r') as stream:
+            frame = stream.read()
+            frames.append(frame)
+    return frames
